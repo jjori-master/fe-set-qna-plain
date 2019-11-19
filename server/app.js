@@ -84,7 +84,7 @@ app.post(
       date: new Date().toISOString().split('T')[0],
     });
 
-    return res.json(response_mock);
+    return res.json(question.answers);
   }
 );
 

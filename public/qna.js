@@ -58,6 +58,17 @@ function QNA() {
     const resultHTML = getQnATemplate(data);
     target.innerHTML = resultHTML;
   }
+
+  function renderAnswers(target, answers, callback) {
+    const answerTarget = target.getElementsByClassName('answer')[0];
+    const resultHTML = getAnswerTemplate(answers);
+    answerTarget.innerHTML = resultHTML;
+
+    if(typeof callback === 'function') {
+      callback();
+    }
+  }
+
   async function initRender(callback) {
     try {
       const res = await fetch(URL.INIT);
@@ -73,7 +84,7 @@ function QNA() {
     }
   }
 
-  async function writeAnswer(questionId, answer) {
+  async function fetchAnswer(questionId, answer) {
     if (!answer || answer.length < 1) {
       alert('답변 내용을 기입하세요~!!');
       return;
@@ -88,11 +99,22 @@ function QNA() {
       const res = await REST.post(url, properties);
       const data = await res.json();
 
-      renderQnA(data.list);
+      return data;
     } catch (err) {
       console.error(err);
       alert((err && err.message) || '댓글 등록에 실패하였습니다.\n관리자에게 문의하시기 바랍니다.');
     }
+  }
+
+  async function writeAnswer(target) {
+    const questionId = target.getAttribute('_questionid');
+    const answerTarget = target.getElementsByTagName('form')[0].getElementsByTagName('textarea')[0];
+    const answer = answerTarget.value;
+
+    const answers = await fetchAnswer(questionId, answer);
+    renderAnswers(target, answers, function() {
+      answerTarget.value = null;
+    });
   }
 
   function initQnaEventListener() {
@@ -103,10 +125,7 @@ function QNA() {
           return;
         }
 
-        const questionId = target.getAttribute('_questionid');
-        const answer = target.getElementsByTagName('form')[0].getElementsByTagName('textarea')[0].value;
-
-        writeAnswer(questionId, answer);
+        writeAnswer(target);
       });
     });
   }
